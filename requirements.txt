@@ -29,7 +29,6 @@ requests==2.32.3
 rich==13.8.1
 setuptools==75.1.0
 six==1.16.0
-tensorflow-cpu==2.5.0
 termcolor==2.4.0
 typing_extensions==4.12.2
 urllib3==2.2.3
