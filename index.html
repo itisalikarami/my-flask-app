@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMK Bilin Parameters Prediction for Non-Composite RWS Connection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: inline-block; width: 100px; }
+        input { width: 200px; padding: 5px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #results { margin-top: 20px; }
+        .warning { color: orange; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>IMK Bilin Parameters Prediction for Non-Composite RWS Connection</h1>
+    
+    <form id="prediction-form">
+        <div class="input-group">
+            <label for="bf">bf:</label>
+            <input type="text" id="bf" name="bf" required>
+        </div>
+        <div class="input-group">
+            <label for="tf">tf:</label>
+            <input type="text" id="tf" name="tf" required>
+        </div>
+        <div class="input-group">
+            <label for="hb">hb:</label>
+            <input type="text" id="hb" name="hb" required>
+        </div>
+        <div class="input-group">
+            <label for="tw">tw:</label>
+            <input type="text" id="tw" name="tw" required>
+        </div>
+        <div class="input-group">
+            <label for="Lb">Lb:</label>
+            <input type="text" id="Lb" name="Lb" required>
+        </div>
+        <div class="input-group">
+            <label for="do">do:</label>
+            <input type="text" id="do" name="do" required>
+        </div>
+        <div class="input-group">
+            <label for="So">So:</label>
+            <input type="text" id="So" name="So" required>
+        </div>
+        <div class="input-group">
+            <label for="fyb">fyb:</label>
+            <input type="text" id="fyb" name="fyb" required>
+        </div>
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#prediction-form').submit(function(e) {
+                e.preventDefault();
+                
+                // Validate inputs
+                var isValid = true;
+                $('#prediction-form input').each(function() {
+                    if (isNaN(parseFloat($(this).val()))) {
+                        alert('Please enter a valid number for ' + $(this).attr('name'));
+                        isValid = false;
+                        return false;  // break the loop
+                    }
+                });
+                
+                if (!isValid) return;  // Stop if validation failed
+
+                // Prepare data
+                var formData = {};
+                $('#prediction-form').serializeArray().forEach(function(item) {
+                    formData[item.name] = parseFloat(item.value);
+                });
+
+                $.ajax({
+                    url: '/predict',
+                    type: 'post',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        let resultsHtml = '<h2>Predicted Values:</h2>';
+                        if (response[0].hb_tw_out_of_range) {
+                            resultsHtml += '<p class="warning">Warning: hb/tw ratio is out of the database range. Predictions may be less accurate and higher correction factors are applied.</p>';
+                        }
+                        response.forEach(function(result) {
+                            resultsHtml += `<h3>${result.param}</h3>`;
+                            resultsHtml += `<p>Predicted Value: ${result.predicted_value}</p>`;
+                            if (result.in_database) {
+                                resultsHtml += `<p>Database Value: ${result.db_value}</p>`;
+                                resultsHtml += `<p>Error: ${result.error_percentage}%</p>`;
+                            } else {
+                                resultsHtml += '<p class="error">Output is not tested (prediction)</p>';
+                            }
+                        });
+                        $('#results').html(resultsHtml);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        $('#results').html(`<p class="error">An error occurred during prediction: ${textStatus}, ${errorThrown}</p>`);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
