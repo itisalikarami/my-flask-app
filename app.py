@@ -9,6 +9,9 @@ import traceback
 
 app = Flask(__name__)
 
+# Use environment variables for configuration
+app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'False') == 'True'
+
 # Load data from Excel file
 df = pd.read_excel('steel_data.xlsx', sheet_name='LOCAL-Behaviour-Non Composite')
 
@@ -159,4 +162,5 @@ def test():
     return jsonify({"message": "Test route is working"}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
